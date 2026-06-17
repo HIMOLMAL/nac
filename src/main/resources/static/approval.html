@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Report Submission</title>
+
+<style>
+body {
+  font-family: Arial;
+  margin: 20px;
+  background: #f5f5f5;
+}
+
+.container {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 700px;
+  margin: auto;
+}
+
+h2 {
+  text-align: center;
+}
+
+label {
+  font-weight: bold;
+}
+
+input, textarea, select {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  margin-bottom: 15px;
+}
+
+button {
+  padding: 10px 20px;
+  margin-right: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.submit-btn {
+  background: #1e8449;
+  color: white;
+}
+
+.approve-btn {
+  background: #2e86c1;
+  color: white;
+}
+
+.reject-btn {
+  background: #c0392b;
+  color: white;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Report Submission & Approval</h2>
+
+<!-- Reporting Officer -->
+<label>Reporting Officer Name</label>
+<input type="text" id="officerName">
+
+<label>Position</label>
+<input type="text" placeholder="Provincial Reporting Officer">
+
+<label>Date</label>
+<input type="date">
+
+<label>Officer Comments</label>
+<textarea rows="3"></textarea>
+
+<button class="submit-btn" onclick="submitReport()">Submit Report</button>
+
+<hr>
+
+
+<script>
+function submitReport() {
+
+    const report = {
+        officerName: document.getElementById("officerName").value,
+        status: "PENDING",
+        submittedDate: new Date().toLocaleString()
+    };
+
+    let reports =
+        JSON.parse(localStorage.getItem("reports")) || [];
+
+    reports.push(report);
+
+    localStorage.setItem(
+        "reports",
+        JSON.stringify(reports)
+    );
+
+    alert("Report submitted for review.");
+}
+
+</script>
+
+</body>
+</html>

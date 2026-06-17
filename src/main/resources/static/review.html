@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Report Review - NACS</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+body {
+    background: #f4f6f9;
+}
+
+.container-box {
+    max-width: 900px;
+    margin: 40px auto;
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+}
+
+.title {
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.label {
+    font-weight: bold;
+    color: #333;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container-box">
+
+    <h3 class="title text-center">NACS Report Review Panel</h3>
+
+    <!-- REPORT DETAILS -->
+    <div id="reportDetails">
+        Loading report...
+    </div>
+
+    <hr>
+
+    <!-- COMMENT BOX -->
+    <div class="mb-3">
+        <label class="label">Review Comment</label>
+        <textarea id="comment" class="form-control" rows="3"
+        placeholder="Enter approval or rejection comment..."></textarea>
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div class="d-flex gap-2">
+        <button class="btn btn-success" onclick="approveReport()">
+            Approve
+        </button>
+
+        <button class="btn btn-danger" onclick="rejectReport()">
+            Reject
+        </button>
+    </div>
+
+</div>
+
+<script>
+let reportId = null;
+
+// ================= GET ID FROM URL =================
+window.onload = function () {
+    const params = new URLSearchParams(window.location.search);
+    reportId = params.get("id");
+
+    if (!reportId) {
+        document.getElementById("reportDetails").innerHTML =
+        
+            "<p class='text-danger'>No report ID provided</p>";
+              
+        return;
+    }
+
+    loadReport(reportId);
+};
+
+// ================= LOAD REPORT =================
+function loadReport(id) {
+
+    fetch("http://localhost:8080/api/reporting-header/" + id)
+        .then(res => res.json())
+        .then(report => {
+
+    document.getElementById("reportDetails").innerHTML = `
+        <h5>Report ID: ${report.id}</h5>
+
+        <p><span class="label">Officer:</span>
+            ${report.user.username}
+        </p>
+
+        <p><span class="label">Province:</span>
+            ${report.province}
+        </p>
+
+        <p><span class="label">District:</span>
+            ${report.district}
+        </p>
+
+        <p><span class="label">Site:</span>
+            ${report.siteName}
+        </p>
+
+        <p><span class="label">Month:</span>
+            ${report.reportingMonth}
+        </p>
+
+        <p><span class="label">Status:</span>
+            ${report.status}
+        </p>
+
+        <hr>
+
+        <h6>Review Information</h6>
+
+        <p><span class="label">Reviewed By:</span>
+            ${report.reviewedBy || "Pending"}
+        </p>
+
+        <p><span class="label">Reviewed At:</span>
+            ${report.reviewedAt || "Pending"}
+        </p>
+
+        <p><span class="label">Approval Comment:</span>
+            ${report.approvalComment || "-"}
+        </p>
+
+        <p><span class="label">Rejection Reason:</span>
+            ${report.rejectionReason || "-"}
+        </p>
+    `;
+})
+        .catch(err => {
+            console.error(err);
+            document.getElementById("reportDetails").innerHTML =
+                "<p class='text-danger'>Failed to load report</p>";
+        });
+}
+
+// ================= APPROVE =================
+function approveReport() {
+
+    if(!confirm("Approve this report?")){
+        return;
+    }
+
+    const comment = document.getElementById("comment").value;
+
+    fetch(`http://localhost:8080/api/reporting-header/approve/${reportId}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"},
+             body: JSON.stringify({
+            comment: comment
+        })
+    })
+    .then(res => res.text())
+    .then(msg => {
+        alert("Report Approved");
+        window.location.href = "management.html";
+    });
+}
+// ================= REJECT =================
+function rejectReport() {
+
+    const comment = document.getElementById("comment").value.trim();
+
+    if(comment === ""){
+        alert("Please provide a rejection reason.");
+        return;
+    }
+
+    fetch(`http://localhost:8080/api/reporting-header/reject/${reportId}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            comment: comment
+        })
+    })
+    .then(res => res.text())
+    .then(msg => {
+        alert("Report Rejected");
+        window.location.href = "management.html";
+    });
+}
+</script>
+
+</body>
+</html>

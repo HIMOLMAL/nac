@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Referral Data Entry</title>
+
+<style>
+  body {
+    font-family: Arial;
+    padding: 20px;
+  }
+
+  h2 {
+    color: #0f9d58;
+  }
+
+  label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+  }
+
+  select, input {
+    width: 250px;
+    padding: 5px;
+    margin-top: 5px;
+  }
+
+  button {
+    margin-top: 15px;
+    padding: 6px 12px;
+    background: #0f9d58;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #0c7c43;
+  }
+
+  table {
+    margin-top: 20px;
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 13px;
+  }
+
+  th, td {
+    border: 1px solid #333;
+    padding: 5px;
+    text-align: center;
+  }
+
+  th {
+    background: #0f9d58;
+    color: white;
+  }
+
+  .remove-btn {
+    background: red;
+    color: white;
+    border: none;
+    padding: 3px 6px;
+    cursor: pointer;
+  }
+</style>
+</head>
+
+<body>
+
+<h2>Referral Data Entry</h2>
+
+<!-- STEP FORM -->
+<div>
+
+  <label>Referral Type</label>
+  <select id="referralType">
+  <option value="">--Select--</option>
+  <option value="No. of people referred for GBV services">GBV services</option>
+  <option value="No. of people referred for PEP">PEP</option>
+  <option value="No. of people referred for VCT/HCT">VCT/HCT</option>
+  <option value="No. of people referred for legal services">Legal services</option>
+  <option value="No. of people referred for TB clinic">TB clinic</option>
+  <option value="No. of people referred for family planning">Family planning</option>
+  <option value="No. of people referred for PrEP">PrEP</option>
+  <option value="No. of people referred for STI">STI</option>
+</select>
+
+  <label>Age Group</label>
+  <select id="ageGroup">
+    <option value="">--Select--</option>
+    <option>0-14</option>
+    <option>15-24</option>
+    <option>25-34</option>
+    <option>35-49</option>
+    <option>>=50</option>
+  </select>
+
+  <label>Category</label>
+  <select id="genderCategory">
+    <option value="">--Select--</option>
+    <option>M</option>
+    <option>F</option>
+    <option>TG</option>
+    <option>MSM</option>
+    <option>MSW</option>
+    <option>FSW</option>
+  </select>
+
+  <label>Count</label>
+  <input type="number" id="count" min="0">
+
+  <br>
+  <button onclick="addEntry()">➕ Add Entry</button>
+
+</div>
+
+<!-- SUMMARY TABLE -->
+<table id="summaryTable">
+  <thead>
+    <tr>
+      <th>Referral Type</th>
+      <th>Age Group</th>
+      <th>Category</th>
+      <th>Count</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<br>
+<button onclick="submitData()">Save Data</button>
+
+<script>
+
+let dataToSend = [];
+
+// ADD ENTRY
+function addEntry() {
+  const referralType = document.getElementById('referralType').value;
+  const ageGroup = document.getElementById('ageGroup').value;
+  const genderCategory = document.getElementById('genderCategory').value;
+  const count = parseInt(document.getElementById('count').value, 10);
+
+  if (!referralType || !ageGroup || !genderCategory || isNaN(count) || count <= 0) {
+    alert("Please fill all fields correctly.");
+    return;
+  }
+
+  const entry = { referralType, ageCategory: ageGroup, genderCategory, count };
+  dataToSend.push(entry);
+
+  renderTable();
+  clearInputs();
+}
+
+// RENDER TABLE
+function renderTable() {
+  const tbody = document.querySelector('#summaryTable tbody');
+  tbody.innerHTML = "";
+
+  dataToSend.forEach((item, index) => {
+    const row = `
+      <tr>
+        <td>${item.referralType}</td>
+        <td>${item.ageCategory}</td>
+        <td>${item.genderCategory}</td>
+        <td>${item.count}</td>
+        <td><button class="remove-btn" onclick="removeEntry(${index})">X</button></td>
+      </tr>
+    `;
+    tbody.innerHTML += row;
+  });
+}
+
+// REMOVE ENTRY
+function removeEntry(index) {
+  dataToSend.splice(index, 1);
+  renderTable();
+}
+
+// CLEAR INPUTS
+function clearInputs() {
+  document.getElementById('count').value = "";
+}
+
+// SUBMIT
+async function submitData() {
+
+  if (dataToSend.length === 0) {
+    alert("No data to submit.");
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/referrals/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dataToSend)
+    });
+
+    if (response.ok) {
+      alert("Data saved successfully!");
+      dataToSend = [];
+      renderTable();
+    } else {
+      alert("Failed to save data.");
+    }
+
+  } catch (error) {
+    alert("Error: " + error.message);
+  }
+}
+
+</script>
+
+</body>
+</html>

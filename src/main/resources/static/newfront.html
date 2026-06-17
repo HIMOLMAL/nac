@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>M&E Data Entry</title>
+
+<style>
+body { font-family: Arial; padding: 20px; }
+h2 { color: #0f9d58; }
+
+label { display: block; margin-top: 10px; font-weight: bold; }
+
+select, input {
+  width: 250px;
+  padding: 6px;
+  margin-top: 5px;
+}
+
+button {
+  margin-top: 15px;
+  padding: 6px 12px;
+  background: #0f9d58;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+table {
+  margin-top: 20px;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th, td {
+  border: 1px solid #333;
+  padding: 6px;
+  text-align: center;
+}
+
+th { background: #0f9d58; color: white; }
+
+.remove-btn {
+  background: red;
+  color: white;
+  border: none;
+  padding: 3px 6px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>M&E Data Entry</h2>
+
+<!-- FORM -->
+<label>Program Area</label>
+<select id="programArea">
+ <option value="">--Select--</option>
+    <option>HIV Awareness</option>
+    <option>Referral</option>
+    <option>GBV</option>
+    <option>VMMC</option>
+    <option>Condom Distribution</option>
+    <option>BCC/Sessions</option>
+  </select>
+
+<label>Indicator</label>
+<select id="indicator"></select>
+
+<label>Age Group</label>
+<select id="ageGroup"></select>
+
+<label>Category</label>
+<select id="category"></select>
+
+<label>Count</label>
+<input type="number" id="value" min="0">
+
+<br>
+<button onclick="addEntry()">➕ Add Entry</button>
+
+<!-- TABLE -->
+<table>
+<thead>
+<tr>
+  <th>Program</th>
+  <th>Indicator</th>
+  <th>Age</th>
+  <th>Category</th>
+  <th>Value</th>
+  <th>Action</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+
+<br>
+<button onclick="submitData()">Save Report</button>
+
+<script>
+
+let dataList = [];
+
+// LOAD DROPDOWNS
+async function loadDropdowns() {
+
+  const programAreas = await fetch('/api/program-areas').then(r => r.json());
+  const ageGroups = await fetch('/api/age-groups').then(r => r.json());
+  const categories = await fetch('/api/categories').then(r => r.json());
+
+  populateSelect('programArea', programAreas, 'programAreaId', 'name');
+  populateSelect('ageGroup', ageGroups, 'ageGroupId', 'name');
+  populateSelect('category', categories, 'categoryId', 'name');
+
+  // Load indicators when program changes
+  document.getElementById('programArea').addEventListener('change', loadIndicators);
+}
+
+function populateSelect(id, data, valueField, textField) {
+  const select = document.getElementById(id);
+  select.innerHTML = '<option value="">--Select--</option>';
+
+  data.forEach(item => {
+    select.innerHTML += `<option value="${item[valueField]}">${item[textField]}</option>`;
+  });
+}
+
+// LOAD INDICATORS
+async function loadIndicators() {
+  const programId = document.getElementById('programArea').value;
+
+  if (!programId) return;
+
+  const indicators = await fetch(`/api/indicators/by-program/${programId}`)
+    .then(r => r.json());
+
+  populateSelect('indicator', indicators, 'indicatorId', 'indicatorName');
+}
+
+// ADD ENTRY
+function addEntry() {
+
+  const programAreaId = document.getElementById('programArea').value;
+  const indicatorId = document.getElementById('indicator').value;
+  const ageGroupId = document.getElementById('ageGroup').value;
+  const categoryId = document.getElementById('category').value;
+  const value = parseInt(document.getElementById('value').value);
+
+  if (!programAreaId || !indicatorId || !ageGroupId || !categoryId || isNaN(value) || value <= 0) {
+    alert("Please fill all fields correctly");
+    return;
+  }
+
+  const entry = { programAreaId, indicatorId, ageGroupId, categoryId, value };
+
+  dataList.push(entry);
+  renderTable();
+}
+
+// RENDER TABLE
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = "";
+
+  dataList.forEach((item, index) => {
+
+    const row = `
+      <tr>
+        <td>${getText('programArea', item.programAreaId)}</td>
+        <td>${getText('indicator', item.indicatorId)}</td>
+        <td>${getText('ageGroup', item.ageGroupId)}</td>
+        <td>${getText('category', item.categoryId)}</td>
+        <td>${item.value}</td>
+        <td><button class="remove-btn" onclick="removeEntry(${index})">X</button></td>
+      </tr>
+    `;
+
+    tbody.innerHTML += row;
+  });
+}
+
+// GET DISPLAY TEXT
+function getText(selectId, value) {
+  const select = document.getElementById(selectId);
+  const option = [...select.options].find(o => o.value == value);
+  return option ? option.text : value;
+}
+
+// REMOVE
+function removeEntry(index) {
+  dataList.splice(index, 1);
+  renderTable();
+}
+
+// SUBMIT
+async function submitData() {
+
+  if (dataList.length === 0) {
+    alert("No data to submit");
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/reports/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dataList)
+    });
+
+    if (response.ok) {
+      alert("Report saved successfully!");
+      dataList = [];
+      renderTable();
+    } else {
+      alert("Failed to save");
+    }
+
+  } catch (err) {
+    alert("Error: " + err.message);
+  }
+}
+
+// INIT
+loadDropdowns();
+
+</script>
+
+</body>
+</html>

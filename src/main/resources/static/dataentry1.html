@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NACS Data Entry</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+body {
+    background: #f5f7fa;
+}
+
+.container-box {
+    max-width: 900px;
+    margin: 40px auto;
+    background: #fff;
+    padding: 25px;
+    border-radius: 10px;
+}
+
+.section-title {
+    background: #198754;
+    color: white;
+    padding: 8px;
+    font-weight: bold;
+    margin-top: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container-box">
+
+<h4 class="text-center">HPDCT Data Entry System</h4>
+
+<!-- ================= REPORTING HEADER ================= -->
+<div class="section-title">Reporting Header</div>
+
+<form id="headerForm">
+
+<div class="row g-3">
+
+    <div class="col-md-4">
+        <label>Type of Agency</label>
+        <input id="typeOfAgency" class="form-control" required>
+    </div>
+
+    <div class="col-md-4">
+        <label>Type of Service</label>
+        <input id="typeOfService" class="form-control" required>
+    </div>
+
+    <div class="col-md-4">
+        <label>Site Name</label>
+        <input id="siteName" class="form-control" required>
+    </div>
+
+    <div class="col-md-4">
+        <label>Province</label>
+        <input id="province" class="form-control" required>
+    </div>
+
+    <div class="col-md-4">
+        <label>District</label>
+        <input id="district" class="form-control" required>
+    </div>
+
+    <div class="col-md-4">
+        <label>LLG</label>
+        <input id="llg" class="form-control" required>
+    </div>
+
+    <div class="col-md-4">
+        <label>Date of Entry</label>
+        <input type="date" id="reportDate" class="form-control" required>
+    </div>
+
+    <div class="col-md-4">
+        <label>Contact Number</label>
+        <input id="contactNumber" class="form-control" required>
+    </div>
+
+    <div class="col-md-4">
+        <label>Reporting Month</label>
+        <input id="reportingMonth" class="form-control" required>
+    </div>
+
+    <div class="col-md-4 d-flex align-items-end">
+        <button type="submit" class="btn btn-success w-100">
+            Submit Report
+        </button>
+    </div>
+
+</div>
+
+</form>
+
+<p id="msg" class="text-success mt-2"></p>
+
+</div>
+
+<script>
+
+let db;
+
+// ================= INIT INDEXEDDB =================
+const request = indexedDB.open("nacs_offline_db", 1);
+
+request.onupgradeneeded = function (event) {
+    db = event.target.result;
+
+    if (!db.objectStoreNames.contains("drafts")) {
+        db.createObjectStore("drafts", { keyPath: "id" });
+    }
+
+    if (!db.objectStoreNames.contains("reports")) {
+        db.createObjectStore("reports", { keyPath: "id", autoIncrement: true });
+    }
+};
+
+request.onsuccess = function (event) {
+    db = event.target.result;
+    loadDraft();
+};
+
+// ================= AUTO SAVE DRAFT =================
+function saveDraft() {
+
+    const draft = {
+        id: "report_draft",
+
+        typeOfAgency: document.getElementById("typeOfAgency").value,
+        typeOfService: document.getElementById("typeOfService").value,
+        siteName: document.getElementById("siteName").value,
+        province: document.getElementById("province").value,
+        district: document.getElementById("district").value,
+        llg: document.getElementById("llg").value,
+        reportDate: document.getElementById("reportDate").value,
+        contactNumber: document.getElementById("contactNumber").value,
+        reportingMonth: document.getElementById("reportingMonth").value
+    };
+
+    localStorage.setItem("report_draft", JSON.stringify(draft));
+}
+
+// attach auto-save
+document.querySelectorAll("input").forEach(input => {
+    input.addEventListener("input", saveDraft);
+});
+
+// ================= RESTORE DRAFT =================
+function loadDraft() {
+
+    const draft = localStorage.getItem("report_draft");
+
+    if (!draft) return;
+
+    const data = JSON.parse(draft);
+
+    document.getElementById("typeOfAgency").value = data.typeOfAgency || "";
+    document.getElementById("typeOfService").value = data.typeOfService || "";
+    document.getElementById("siteName").value = data.siteName || "";
+    document.getElementById("province").value = data.province || "";
+    document.getElementById("district").value = data.district || "";
+    document.getElementById("llg").value = data.llg || "";
+    document.getElementById("reportDate").value = data.reportDate || "";
+    document.getElementById("contactNumber").value = data.contactNumber || "";
+    document.getElementById("reportingMonth").value = data.reportingMonth || "";
+}
+
+// ================= SUBMIT REPORT =================
+document.getElementById("headerForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if (!user || !user.userId) {
+        alert("User not logged in");
+        return;
+    }
+
+    fetch("http://localhost:8080/api/reporting-header/create/" + user.userId, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            typeOfAgency: typeOfAgency.value,
+            typeOfService: typeOfService.value,
+            siteName: siteName.value,
+            province: province.value,
+            district: district.value,
+            llg: llg.value,
+            reportDate: reportDate.value,
+            contactNumber: contactNumber.value,
+            reportingMonth: reportingMonth.value,
+            status: "PENDING",
+            submittedAt: new Date().toISOString()
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if (!data.id) {
+            alert("Save failed");
+            return;
+        }
+
+        document.getElementById("msg").innerText =
+            "Report submitted successfully (PENDING)";
+
+        // ✅ CLEAR DRAFT AFTER SUCCESS
+        localStorage.removeItem("report_draft");
+
+        document.getElementById("headerForm").reset();
+    })
+    .catch(err => {
+        console.error(err);
+
+        document.getElementById("msg").innerText =
+            "Offline mode: data saved locally (not synced yet)";
+    });
+});
+
+</script>
+
+</body>
+</html>

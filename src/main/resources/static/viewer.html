@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Management Dashboard</title>
+
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+body {
+    background: #f4f6f9;
+}
+
+.header {
+    background: white;
+    color: #198754;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 3px solid #198754;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.card-box {
+    border-radius: 12px;
+    padding: 20px;
+    color: white;
+    height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-shadow: 0px 2px 10px rgba(0,0,0,0.1);
+}
+
+.card-title {
+    font-size: 14px;
+}
+
+.card-value {
+    font-size: 30px;
+    font-weight: bold;
+}
+
+.bg-blue {
+    background: #0d6efd;
+}
+
+.bg-green {
+    background: #198754;
+}
+
+.bg-orange {
+    background: #fd7e14;
+}
+
+.bg-red {
+    background: #dc3545;
+}
+
+.chart-container {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 20px;
+    box-shadow: 0px 2px 10px rgba(0,0,0,0.1);
+}
+
+.table-container {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 20px;
+    box-shadow: 0px 2px 10px rgba(0,0,0,0.1);
+}
+
+.user-area {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* hidden logout button */
+.logout-wrapper {
+    position: relative;
+}
+
+/* logout button starts hidden */
+.logout-btn {
+    opacity: 0;
+    transform: translateY(-5px);
+    pointer-events: none;
+    transition: all 0.25s ease;
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+}
+
+/* show on hover */
+.user-area:hover .logout-btn {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* hover effect */
+.logout-btn:hover {
+    background: #bb2d3b;
+    transform: scale(1.05);
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+
+     <!-- LEFT LOGO -->
+    <div class="d-flex align-items-center gap-2">
+
+        <img src="images/emblem.png"
+             style="height:50px">
+
+       
+    <h2>National AIDS Council - Management Dashboard</h2>
+
+
+ <!-- RIGHT LOGO -->
+    <img src="images/nac.jpg"
+         style="height:50px">
+</div>
+
+<div class="user-area">
+    <small id="userInfo"></small>
+
+    <div class="logout-wrapper">
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+
+</div>
+
+</div>
+
+<div class="container-fluid mt-4">
+
+    <!-- FILTER SECTION -->
+
+<div class="chart-container mb-4">
+
+    <h5 class="mb-3">Dashboard Filters</h5>
+
+    <div class="row g-3">
+
+        <!-- PROGRAM AREA -->
+        <div class="col-md-2">
+            <label>Program Area</label>
+
+            <select id="filterProgram" class="form-control">
+                <option value="">All</option>
+<option value="HIV Awareness">HIV Awareness</option>
+<option value="Referrals">Referrals</option>
+<option value="BCC">BCC</option>
+<option value="GBV">GBV</option>
+<option value="VMMC">VMMC</option>
+<option value="Condom Distribution">Condom Distribution</option>
+            </select>
+        </div>
+
+        <!-- GENDER -->
+        <div class="col-md-2">
+            <label>Gender</label>
+
+            <select id="filterGender" class="form-control">
+                <option value="">All</option>
+                <option value="M">M</option>
+                <option value="F">F</option>
+                <option value="TG">TG</option>
+                <option value="MSM">MSM</option>
+                <option value="MSW">MSW</option>
+                <option value="FSW">FSW</option>
+            </select>
+        </div>
+
+       <!-- PROVINCE -->
+<div class="col-md-2">
+    <label>Province</label>
+
+    <select id="filterProvince" class="form-control">
+        <option value="">All Provinces</option>
+
+        <option value="Central">Central</option>
+        <option value="Chimbu">Chimbu</option>
+        <option value="East New Britain">East New Britain</option>
+        <option value="East Sepik">East Sepik</option>
+        <option value="Eastern Highlands">Eastern Highlands</option>
+        <option value="Enga">Enga</option>
+        <option value="Gulf">Gulf</option>
+        <option value="Hela">Hela</option>
+        <option value="Jiwaka">Jiwaka</option>
+        <option value="Madang">Madang</option>
+        <option value="Manus">Manus</option>
+        <option value="Milne Bay">Milne Bay</option>
+        <option value="Morobe">Morobe</option>
+        <option value="New Ireland">New Ireland</option>
+        <option value="Northern">Northern</option>
+        <option value="Sandaun">Sandaun</option>
+        <option value="Southern Highlands">Southern Highlands</option>
+        <option value="West New Britain">West New Britain</option>
+        <option value="Western">Western</option>
+        <option value="Western Highlands">Western Highlands</option>
+        <option value="Bougainville">Bougainville</option>
+        <option value="National Capital District">National Capital District</option>
+    </select>
+</div>
+
+        <!-- FROM DATE -->
+        <div class="col-md-2">
+            <label>From Date</label>
+
+            <input type="date"
+                   id="filterFrom"
+                   class="form-control">
+        </div>
+
+        <!-- TO DATE -->
+        <div class="col-md-2">
+            <label>To Date</label>
+
+            <input type="date"
+                   id="filterTo"
+                   class="form-control">
+        </div>
+
+        <!-- MONTH -->
+        <div class="col-md-2">
+            <label>Reporting Month</label>
+
+           <select id="filterMonth" class="form-control">
+    <option value="">All</option>
+    <option value="January">January</option>
+    <option value="February">February</option>
+    <option value="March">March</option>
+    <option value="April">April</option>
+    <option value="May">May</option>
+    <option value="June">June</option>
+    <option value="July">July</option>
+    <option value="August">August</option>
+    <option value="September">September</option>
+    <option value="October">October</option>
+    <option value="November">November</option>
+    <option value="December">December</option>
+</select>
+                   
+        </div>
+
+    </div>
+
+    <div class="row mt-3">
+
+        <div class="col-md-3">
+            <button class="btn btn-success w-100"
+                    onclick="loadDashboard()">
+
+                Apply Filters
+
+            </button>
+        </div>
+
+    </div>
+
+</div>
+
+    <!-- KPI CARDS -->
+    <div class="row g-3">
+
+        <div class="col-md-3">
+            <div class="card-box bg-blue">
+                <div class="card-title">Total Reports</div>
+                <div class="card-value" id="totalReports">0</div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card-box bg-green">
+                <div class="card-title">Total Beneficiaries</div>
+                <div class="card-value" id="totalBeneficiaries">0</div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card-box bg-orange">
+                <div class="card-title">Reporting Sites</div>
+                <div class="card-value" id="reportingSites">0</div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card-box bg-red">
+                <div class="card-title">Reporting Provinces</div>
+                <div class="card-value" id="reportingProvinces">0</div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- CHARTS -->
+    <div class="row mt-4 g-4">
+
+        <!-- PROGRAM BAR CHART -->
+        <div class="col-md-6">
+            <div class="chart-container">
+                <h5>Program Area Summary</h5>
+                <canvas id="programChart"></canvas>
+            </div>
+        </div>
+
+        <!-- GENDER PIE CHART -->
+        <div class="col-md-6">
+            <div class="chart-container">
+                <h5>Gender Distribution</h5>
+                <canvas id="genderChart"></canvas>
+            </div>
+        </div>
+
+        <!-- MONTHLY TREND -->
+        <div class="col-md-12">
+            <div class="chart-container">
+                <h5>Monthly Reporting Trend</h5>
+                <canvas id="monthlyChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="col-md-6">
+    <div class="chart-container">
+        <h5>Province Performance</h5>
+        <canvas id="provinceChart"></canvas>
+    </div>
+</div>
+
+<div class="col-md-6">
+    <div class="chart-container">
+        <h5>Agency Performance</h5>
+        <canvas id="agencyChart"></canvas>
+    </div>
+</div>
+
+
+    <!-- RECENT REPORTS TABLE -->
+    <div class="table-container">
+
+        <h5>Recent Reports</h5>
+
+        <table class="table table-bordered table-striped">
+
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Program Area</th>
+                    <th>Indicator</th>
+                    <th>Gender</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+
+            <tbody id="reportBody"></tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+<script>
+
+document.getElementById("userInfo").innerText =
+    "Logged in as: " + JSON.parse(localStorage.getItem("user")).username;
+
+    function logout() {
+    localStorage.removeItem("user");
+    window.location.href = "login.html"; // change if your login page name differs
+}
+
+let programChart;
+let genderChart;
+let monthlyChart;
+let provinceChart;
+let agencyChart;
+
+async function loadProvinces() {
+    try {
+
+        const response = await fetch(
+            "http://localhost:8080/api/dashboard/provinces"
+        );
+
+        const provinces = await response.json();
+
+        const provinceSelect =
+            document.getElementById("filterProvince");
+
+        provinces.forEach(province => {
+
+            const option =
+                document.createElement("option");
+
+            option.value = province;
+            option.textContent = province;
+
+            provinceSelect.appendChild(option);
+        });
+
+    } catch (err) {
+        console.error("Failed to load provinces", err);
+    }
+}
+
+// =============================
+// LOAD DASHBOARD
+// =============================
+
+async function loadDashboard() {
+
+    try {
+
+        // =========================
+        // FILTERS
+        // =========================
+        const params = new URLSearchParams();
+
+        const program = document.getElementById("filterProgram").value;
+        const gender = document.getElementById("filterGender").value;
+        const province = document.getElementById("filterProvince").value;
+        const from = document.getElementById("filterFrom").value;
+        const to = document.getElementById("filterTo").value;
+        const month = document.getElementById("filterMonth").value;
+
+        if (program) params.append("program", program);
+        if (gender) params.append("gender", gender);
+        if (province) params.append("province", province);
+        if (from) params.append("from", from);
+        if (to) params.append("to", to);
+        if (month) params.append("month", month);
+
+        console.log("FINAL PARAMS:", params.toString());
+
+        // =========================
+        // FETCH DASHBOARD API
+        // =========================
+        const response = await fetch(
+            `http://localhost:8080/api/dashboard?${params}`
+        );
+
+        const data = await response.json();
+
+        console.log("Dashboard Response:", data);
+
+        // =========================
+        // KPI CARDS
+        // =========================
+        document.getElementById("totalReports").innerText =
+            data.totalReports || 0;
+
+        document.getElementById("totalBeneficiaries").innerText =
+            data.totalBeneficiaries || 0;
+
+        document.getElementById("reportingSites").innerText =
+            data.reportingSites || 0;
+
+        document.getElementById("reportingProvinces").innerText =
+            data.reportingProvinces || 0;
+
+        // =========================
+        // DESTROY OLD CHARTS
+        // =========================
+        if (programChart) programChart.destroy();
+        if (genderChart) genderChart.destroy();
+        if (monthlyChart) monthlyChart.destroy();
+        if (provinceChart) provinceChart.destroy();
+        if (agencyChart) agencyChart.destroy();
+
+        // =========================
+        // PROGRAM CHART
+        // =========================
+        programChart = new Chart(
+            document.getElementById("programChart"),
+            {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(data.programTotals || {}),
+                    datasets: [{
+                        label: 'Program Totals',
+                        data: Object.values(data.programTotals || {})
+                    }]
+                }
+            }
+        );
+
+        // =========================
+        // GENDER CHART
+        // =========================
+        genderChart = new Chart(
+            document.getElementById("genderChart"),
+            {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(data.genderTotals || {}),
+                    datasets: [{
+                        data: Object.values(data.genderTotals || {})
+                    }]
+                }
+            }
+        );
+
+        // =========================
+        // MONTHLY CHART
+        // =========================
+        monthlyChart = new Chart(
+            document.getElementById("monthlyChart"),
+            {
+                type: 'line',
+                data: {
+                    labels: Object.keys(data.monthlyTotals || {}),
+                    datasets: [{
+                        label: 'Monthly',
+                        data: Object.values(data.monthlyTotals || {}),
+                        tension: 0.3
+                    }]
+                }
+            }
+        );
+
+        // =========================
+        // PROVINCE CHART
+        // =========================
+        provinceChart = new Chart(
+            document.getElementById("provinceChart"),
+            {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(data.provinceTotals || {}),
+                    datasets: [{
+                        label: 'Province',
+                        data: Object.values(data.provinceTotals || {})
+                    }]
+                }
+            }
+        );
+
+        // =========================
+        // AGENCY CHART
+        // =========================
+        agencyChart = new Chart(
+            document.getElementById("agencyChart"),
+            {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(data.agencyTotals || {}),
+                    datasets: [{
+                        label: 'Agency',
+                        data: Object.values(data.agencyTotals || {})
+                    }]
+                }
+            }
+        );
+
+    } catch (error) {
+        console.error("Dashboard Error:", error);
+    }
+}
+
+// =============================
+// AUTO LOAD ON PAGE START
+// =============================
+window.onload = loadDashboard;
+
+window.onload = async () => {
+    await loadProvinces();
+    await loadDashboard();
+};
+
+</script>
+</body>
+</html>

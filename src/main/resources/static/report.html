@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NAC Reporting System</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #f4f6f9;
+    margin: 0;
+}
+
+.container {
+    padding: 20px;
+}
+
+.section {
+    display: none;
+}
+
+.section.active {
+    display: block;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 12px;
+}
+
+th, td {
+    border: 1px solid #999;
+    padding: 4px;
+    text-align: center;
+}
+
+th {
+    background: #0a8f3c;
+    color: white;
+}
+
+input {
+    width: 60px;
+}
+
+.buttons {
+    margin-top: 20px;
+}
+
+button {
+    padding: 10px 15px;
+    margin: 5px;
+    background: #0a8f3c;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #06692c;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- ================= HEADER ================= -->
+ 
+<div class="section active" id="section-0">
+<h2>Report Header</h2>
+
+Report Name: <input id="reportName"><br><br>
+
+Report Date: <input type="date" id="reportDate"><br><br>
+
+User ID: <input id="userId"><br><br>
+
+Contact Number: <input id="contactNumber"><br><br>
+
+Province: <input id="province"><br><br>
+
+District: <input id="district"><br><br>
+
+LLG: <input id="llg"><br><br>
+
+Reporting Month: <input id="reportingMonth" placeholder="e.g. Jan 2026"><br><br>
+
+Site Name: <input id="siteName"><br><br>
+
+Type of Agency: <input id="typeOfAgency"><br><br>
+
+Type of Service: <input id="typeOfService"><br><br>
+
+
+<div class="buttons">
+<button onclick="next()">Next</button>
+</div>
+</div>
+
+<!-- ================= HIV AWARENESS ================= -->
+<div class="section" id="section-1">
+<h2>HIV Awareness</h2>
+
+<table>
+<tr>
+<th>Indicator</th>
+<th>Community</th>
+<th>Schools</th>
+<th>Workplace</th>
+</tr>
+
+<tr>
+<td>People Reached</td>
+<td><input data-section="HIV_AWARENESS" data-indicator="Reached" data-category="Community"></td>
+<td><input data-section="HIV_AWARENESS" data-indicator="Reached" data-category="Schools"></td>
+<td><input data-section="HIV_AWARENESS" data-indicator="Reached" data-category="Workplace"></td>
+</tr>
+</table>
+
+<div class="buttons">
+<button onclick="back()">Back</button>
+<button onclick="next()">Next</button>
+</div>
+</div>
+
+<!-- ================= REFERRALS (WITH AGE) ================= -->
+<div class="section" id="section-2">
+<h2>Referrals (Age + Gender)</h2>
+
+<table>
+<tr>
+<th>Indicator</th>
+<th>Age</th>
+<th>M</th>
+<th>F</th>
+</tr>
+
+<tr>
+<td>HIV Testing</td>
+<td>15-24</td>
+<td><input data-section="REFERRALS" data-indicator="HIV Testing" data-age="15-24" data-gender="M"></td>
+<td><input data-section="REFERRALS" data-indicator="HIV Testing" data-age="15-24" data-gender="F"></td>
+</tr>
+
+<tr>
+<td>HIV Testing</td>
+<td>25-34</td>
+<td><input data-section="REFERRALS" data-indicator="HIV Testing" data-age="25-34" data-gender="M"></td>
+<td><input data-section="REFERRALS" data-indicator="HIV Testing" data-age="25-34" data-gender="F"></td>
+</tr>
+</table>
+
+<div class="buttons">
+<button onclick="back()">Back</button>
+<button onclick="next()">Next</button>
+</div>
+</div>
+
+<!-- ================= CONDOM ================= -->
+<div class="section" id="section-3">
+<h2>Condom Distribution</h2>
+
+<table>
+<tr>
+<th>Type</th>
+<th>Value</th>
+</tr>
+
+<tr>
+<td>Male Condoms</td>
+<td><input data-section="CONDOM" data-indicator="Male"></td>
+</tr>
+
+<tr>
+<td>Female Condoms</td>
+<td><input data-section="CONDOM" data-indicator="Female"></td>
+</tr>
+</table>
+
+<div class="buttons">
+<button onclick="back()">Back</button>
+<button onclick="next()">Next</button>
+</div>
+</div>
+
+<!-- ================= BCC ================= -->
+<div class="section" id="section-4">
+<h2>BCC Sessions</h2>
+
+<table>
+<tr>
+<th>Session Type</th>
+<th>Value</th>
+</tr>
+
+<tr>
+<td>One-on-One</td>
+<td><input data-section="BCC" data-indicator="OneOnOne"></td>
+</tr>
+
+<tr>
+<td>Group</td>
+<td><input data-section="BCC" data-indicator="Group"></td>
+</tr>
+</table>
+
+<div class="buttons">
+<button onclick="back()">Back</button>
+<button onclick="next()">Next</button>
+</div>
+</div>
+
+<!-- ================= APPROVAL ================= -->
+<div class="section" id="section-5">
+<h2>Officer & M&E Approval</h2>
+
+Officer Comment:<br>
+<textarea id="officerComment"></textarea><br><br>
+
+M&E Comment:<br>
+<textarea id="meComment"></textarea><br><br>
+
+Status:
+<select id="status">
+<option>SUBMITTED</option>
+<option>APPROVED</option>
+<option>REJECTED</option>
+</select>
+
+<div class="buttons">
+<button onclick="back()">Back</button>
+<button onclick="submitReport()">Submit</button>
+</div>
+</div>
+
+</div>
+
+<script>
+
+let current = 0;
+
+function showSection(index) {
+    document.querySelectorAll(".section").forEach((s, i) => {
+        s.classList.remove("active");
+        if (i === index) s.classList.add("active");
+    });
+}
+
+function next() {
+    current++;
+    showSection(current);
+}
+
+function back() {
+    current--;
+    showSection(current);
+}
+
+// ================= COLLECT DATA =================
+function collectData() {
+
+    let data = [];
+
+    document.querySelectorAll("input").forEach(input => {
+
+        if (input.value !== "") {
+
+            data.push({
+                section: input.dataset.section,
+                indicator: input.dataset.indicator,
+                category: input.dataset.category || null,
+                ageGroup: input.dataset.age || null,
+                gender: input.dataset.gender || null,
+                value: parseInt(input.value)
+            });
+        }
+    });
+
+    return data;
+}
+
+// ================= SUBMIT =================
+
+function submitReport() {
+
+    const report = {
+        reportName: document.getElementById("reportName").value,
+        reportDate: document.getElementById("reportDate").value,
+        userId: parseInt(document.getElementById("userId").value),
+        contactNumber: document.getElementById("contactNumber").value,
+        province: document.getElementById("province").value,
+        district: document.getElementById("district").value,
+        llg: document.getElementById("llg").value,
+        reportingMonth: document.getElementById("reportingMonth").value,
+        siteName: document.getElementById("siteName").value,
+        typeOfAgency: document.getElementById("typeOfAgency").value,
+        typeOfService: document.getElementById("typeOfService").value,
+
+        // approval fields
+        status: document.getElementById("status").value,
+        officerComment: document.getElementById("officerComment").value,
+        meComment: document.getElementById("meComment").value
+    };
+
+    const data = collectData();
+
+    fetch("http://localhost:8080/api/reports/save", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            report: report,
+            data: data
+        })
+    })
+    .then(res => res.text())
+    .then(msg => {
+        alert("Report saved successfully!");
+    })
+    .catch(err => {
+        alert("Error saving report");
+        console.error(err);
+    });
+}
+
+</script>
+
+</body>
+</html>

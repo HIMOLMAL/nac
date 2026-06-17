@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Login</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+body {
+    background-image: url("/images/img_bglogin.png");
+    background-size: cover;
+    background-position: center;
+}
+.login-box {
+    max-width: 400px;
+    margin: 80px auto;
+    padding: 30px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.logo {
+    max-width: 80px;
+    height: 80px;
+    object-fit: contain;
+    margin: 5px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="login-box text-center">
+
+    <h4 class="mb-3">HIV Prevention Data Collection Tool</h4>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <img src="/images/emblem.png" class="logo" alt="Logo 1">
+        <img src="/images/nac.jpg" class="logo" alt="Logo 2">
+    </div>
+
+    <h4 class="mb-3">Login</h4>
+
+    <form id="loginForm">
+        <div class="mb-3">
+            <input type="text" id="username" class="form-control" placeholder="Username" required>
+        </div>
+
+        <div class="mb-3">
+            <input type="password" id="password" class="form-control" placeholder="Password" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Login</button>
+
+        <div class="mt-3">
+            <a href="/forgotpassword.html">Forgot Password?</a>
+        </div>
+
+        <div class="mt-2">
+            <span>Don't have an account? </span>
+            <a href="/registration.html">Register here</a>
+        </div>
+
+
+    </form>
+
+    <p id="message" class="mt-3 text-danger"></p>
+</div>
+
+<script>
+document.getElementById("loginForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+
+    fetch("http://localhost:8080/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+    })
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(err => {
+                throw new Error(err.error || "Login failed");
+            });
+        }
+        return res.json();
+    })
+    .then(data => {
+
+        console.log("LOGIN RESPONSE:", data);
+
+        if (data.userId) {
+
+            localStorage.setItem("user", JSON.stringify({
+                userId: data.userId,
+                username: data.username,
+                role: data.role
+            }));
+
+            const role = (data.role || "").trim();
+
+            console.log("ROLE:", role);
+
+            if (role === "Provincial Reporting Officer") {
+                window.location.href = "/dataentry.html";
+
+            } else if (role === "M & E Officer") {
+                window.location.href = "/adminnew.html";
+
+            } else if (role === "Management") {
+                window.location.href = "/viewer.html";
+
+            } else {
+                document.getElementById("message").innerText =
+                    "Unknown role: " + role;
+            }
+
+        } else {
+            document.getElementById("message").innerText =
+                data.error || "Invalid login";
+        }
+
+    })
+    .catch(err => {
+        console.error("LOGIN ERROR:", err);
+        document.getElementById("message").innerText = err.message;
+    });
+
+    function getCurrentUser() {
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if (!user || !user.userId) {
+        alert("Session expired. Please login again.");
+        window.location.href = "login.html";
+        return null;
+    }
+
+    return user;
+}
+});
+</script>
+</body>
+</html>
